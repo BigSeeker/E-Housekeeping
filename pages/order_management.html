@@ -1,0 +1,405 @@
+<div>
+    <div class="order_wbl">
+        <!--   顶部操作栏     -->
+        <div class="operate_wbl">
+            <div class="left_wbl">
+                <button class="danger batchDeletion">批量删除</button>
+                &emsp;
+                <button class="primary"> 导出</button>
+            </div>
+            <div class="right_wbl">
+                <input type="text" placeholder="请输入......" id="searchById_wbl"/>
+                <span class="iconfont icon-sousuo"></span>
+            </div>
+        </div>
+
+        <!--    底部数据显示栏    -->
+
+        <div class="table_wbl">
+            <table>
+                <thead>
+                <tr>
+                    <th><input type="checkbox" class="selectAll_wbl"></th>
+                    <th>顾客编号</th>
+                    <th>地址编号</th>
+                    <th>下单时间</th>
+                    <th>员工编号</th>
+                    <th>总计个数</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                <div class="loading_wbl">
+                    <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+                    <span class="sr-only">Loading...</span>
+                </div>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="./assets/js/js_eric/ajax.js"></script>
+<script>
+
+    // 务必保证所有的JS代码都处于自成空间的匿名函数块中，以保障变量污染
+    /**
+     * @time  2019/9/6 22:08
+     * @author  Eric Wang <vuejs@vip.qq.com>
+     * @desc   订单管理模块
+     */
+    ;(() => {
+
+        // 实例化自己封装的Ajax，合理利用拦截器
+        const http = new MyHttpRequest("http://134.175.154.93:6677");
+
+        // 初始化多选队列
+        const queue = new Map();
+
+        // 从服务器获取数据
+        const findAllfromServe = () => {
+            // 初始化模板信息
+            let tempList = "";
+            // 查询所有数据
+            http.get("/order/findAllOrder")
+                .then(data => {
+                    console.log(data.data);
+                    data.data.map(item => {
+                        tempList +=
+                            `
+                          <tr data-key="${item.id}">
+                            <td><input type="checkbox" ></td>
+                            <td>${item.customerId}</td>
+                            <td>${item.addressId}</td>
+                            <td>${item.orderTime}</td>
+                            <td>${item.waiterId}</td>
+                            <td>${item.total}</td>
+                            <td>
+                            <button class="warning delOneRow_wbl">删除</button>&emsp;
+                            <button class="primary lookDetails_wbl">详情</button>
+                            </td>
+                          </tr>
+                         `;
+                    });
+
+                    // 异步处理数据
+                    setTimeout(() => {
+                        // 800ms后结束loading动画
+                        $(".loading_wbl").css({display: "none"});
+
+                        // 追加table数据列表
+                        $("table>tbody").append(tempList);
+
+                        // 为table行添加点击事件
+                        // 链式调用，事件代理模式
+                        $(`.table_wbl > table > tbody > tr`)
+                            .on("click", ".delOneRow_wbl", function () {
+                                $(this).parent().parent().remove();
+                                // console.log();
+                            })
+                            .on("click", ".lookDetails_wbl", function () {
+                                console.log(this);
+                            })
+                            .on("click", "td>input", function (e) {
+                                $(this).change(function (e) {
+                                    // console.log(e.target.checked);
+                                    if (e.target.checked) {
+
+                                        // 放入集合，key存id，value存DOM对象
+                                        // key给服务器，value给批量删除的DOM事件
+                                        queue.set($(this).parent().parent().attr("data-key"), $(this).parent().parent());
+                                    } else {
+                                        // console.log($(".selectAll_wbl").attr({checked: false}));
+                                        // console.log(455)
+                                        // 抛出集合
+                                        queue.delete($(this).parent().parent().attr("data-key"));
+                                    }
+                                    // console.log(queue)
+                                    e.stopPropagation()
+                                });
+
+                                e.stopPropagation()
+                            })
+                    }, 800)
+                })
+                .catch(err => Promise.reject(err));
+        };
+        findAllfromServe();
+
+
+        // 多行删除
+        const deleteSingleLine = () => {
+            $(".batchDeletion").on("click", function () {
+                console.log(queue)
+                queue.forEach((item, index) => {
+                    item.remove();
+                })
+            });
+
+        };
+        deleteSingleLine();
+
+        // 选中所有
+        const selectAllDom = () => {
+            $(".selectAll_wbl").on("change", function (e) {
+                if (e.target.checked) {
+                    // 事件自触发选中所有
+                    $("td>input")
+                        .trigger("click");
+                    // console.log(queue)
+                } else {
+
+                    // 事件自触发取消选中所有
+                    $("td>input")
+                        .trigger("click");
+                    // console.log(queue)
+                }
+            })
+        };
+        selectAllDom();
+
+        // 搜索按钮，条件搜索
+        const searchById = () => {
+            $("#searchById_wbl").on("input", function (e) {
+                console.log(e.target.value);
+                axios.get("http://134.175.154.93:6677/order/findOrderById", {
+                    params: {
+                        id: e.target.value
+                    }
+                })
+                    .then(data => {
+
+                        if (data.data.data) {
+
+                            const {id, customerId, addressId, orderTime, waiterId, total} = data.data.data;
+
+                            let template = `
+                          <tr data-key="${id}">
+                            <td><input type="checkbox" ></td>
+                            <td>${customerId}</td>
+                            <td>${addressId}</td>
+                            <td>${orderTime}</td>
+                            <td>${waiterId}</td>
+                            <td>${total}</td>
+                            <td>
+                            <button class="warning delOneRow_wbl">删除</button>&emsp;
+                            <button class="primary lookDetails_wbl">详情</button>
+                            </td>
+                          </tr>
+                         `;
+
+                            // 先置空数据
+                            $("table>tbody").empty();
+
+                            // 打开加载动画
+                            $(".loading_wbl").css({display: "block"});
+                            // 异步处理数据
+                            setTimeout(() => {
+                                // 800ms后结束loading动画
+                                $(".loading_wbl").css({display: "none"});
+
+                                // 追加table数据列表
+                                $("table>tbody").append(template);
+
+                                // 为table行添加点击事件
+                                // 链式调用，事件代理模式
+                                $(`.table_wbl > table > tbody > tr`)
+                                    .on("click", ".delOneRow_wbl", function () {
+                                        $(this).parent().parent().remove();
+                                        // console.log();
+                                    })
+                                    .on("click", ".lookDetails_wbl", function () {
+                                        console.log(this);
+                                    })
+                                    .on("click", "td>input", function (e) {
+                                        $(this).change(function (e) {
+                                            // console.log(e.target.checked);
+                                            if (e.target.checked) {
+
+                                                // 放入集合，key存id，value存DOM对象
+                                                // key给服务器，value给批量删除的DOM事件
+                                                queue.set($(this).parent().parent().attr("data-key"), $(this).parent().parent());
+                                            } else {
+                                                // console.log($(".selectAll_wbl").attr({checked: false}));
+                                                // console.log(455)
+                                                // 抛出集合
+                                                queue.delete($(this).parent().parent().attr("data-key"));
+                                            }
+                                            // console.log(queue)
+                                            e.stopPropagation()
+                                        });
+
+                                        e.stopPropagation()
+                                    })
+                            }, 800)
+
+
+                        } else {
+                            // console.log(455)
+                            // 如果不为空
+                            $("table>tbody").empty();
+                            $(".loading_wbl").css({display: "block"});
+                        }
+
+                        if(!e.target.value) {
+                            // console.log("我没了");
+                            $("table>tbody").empty();
+                            findAllfromServe();
+                        }
+                    })
+            })
+        };
+
+        searchById();
+
+    })()
+</script>
+
+<style>
+    div div.order_wbl {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /*操作主容器*/
+    div div.order_wbl .operate_wbl {
+        display: flex;
+        align-items: center;
+    }
+
+    /*左侧按钮区域*/
+    div div.order_wbl .operate_wbl .left_wbl {
+        flex-basis: 70%;
+    }
+
+    /*右侧搜索框区域*/
+    div div.order_wbl .operate_wbl .right_wbl {
+        display: flex;
+        align-items: center;
+    }
+
+
+    /*搜索框内部input*/
+    div div.order_wbl .operate_wbl .right_wbl input {
+        appearance: none;
+        outline: unset;
+        width: 180px;
+        height: 25px;
+        border-radius: 5px 0 0 5px;
+        border: 1px solid #efefef;
+        border-right: 0;
+        padding: 5px;
+        padding-left: 15px;
+        display: block;
+    }
+
+    /*搜索图标*/
+    div div.order_wbl .operate_wbl .right_wbl span {
+        display: block;
+        height: 35px;
+        line-height: 35px;
+        border: 1px solid #efefef;
+        border-left: 0;
+        background-color: #ffffff;
+        border-radius: 0 5px 5px 0;
+        padding-right: 15px;
+    }
+
+    /*当搜索框聚焦的时候蓝色框*/
+    div div.order_wbl .operate_wbl .right_wbl input:focus {
+        border: 1px solid #2d8cf0;
+        border-right: 0;
+    }
+
+    /*控制图标边框*/
+    div div.order_wbl .operate_wbl .right_wbl input:focus + span {
+        border: 1px solid #2d8cf0;
+        border-left: 0;
+    }
+
+    /*数据表格区域容器*/
+    div div.order_wbl div.table_wbl {
+        margin-top: 25px;
+        padding: 5px;
+        border-radius: 5px;
+        background-color: #ffffff;
+        position: relative;
+    }
+
+    /*表格*/
+    div div.order_wbl div.table_wbl table {
+        width: 100%;
+        padding: 5px;
+        /*border-collapse: collapse;*/
+        border: 1px solid #dcdee2;
+        border-radius: 8px;
+        appearance: none;
+        outline: unset;
+        border-spacing: 0;
+        font-size: 14px;
+    }
+
+    /*表格头部*/
+    div div.order_wbl div.table_wbl table thead tr {
+        background-color: #f8f8f9;
+
+    }
+
+    div div.order_wbl div.table_wbl table thead tr th {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #dcdee2;
+        border-right: 1px solid #dcdee2;
+
+    }
+
+    div div.order_wbl div.table_wbl table thead tr th:last-child {
+        border-right: 0;
+
+    }
+
+    /*表格鼠标滑过效果*/
+    div div.order_wbl div.table_wbl table tbody tr:hover {
+        background-color: #ebf7ff;
+    }
+
+    div div.order_wbl div.table_wbl table tbody tr td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #dcdee2;
+        border-right: 1px solid #dcdee2;
+    }
+
+    /*加载loading*/
+    .loading_wbl {
+        box-sizing: border-box;
+        width: 100%;
+        height: 300px;
+        padding: 280px 0 0 0;
+        text-align: center;
+        display: none;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto auto;
+        color: #2d8cf0;
+        /*background-color: #515a6e;*/
+    }
+
+    div div.order_wbl div.table_wbl table tbody tr td:last-child {
+        border-right: 0;
+    }
+
+    div div.order_wbl div.table_wbl table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    div div.order_wbl div.table_wbl table thead tr input {
+        appearance: none;
+    }
+
+</style>

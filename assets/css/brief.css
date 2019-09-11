@@ -1,0 +1,53 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  font-size: 16px;
+  color: #515a6e;
+  line-height: 18px;
+}
+body .divider {
+  background-color: #e8eaec;
+  height: 1px;
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+body button {
+  width: 77px;
+  height: 31px;
+  appearance: none;
+  outline: unset;
+  border-radius: 5px;
+  border: 1px solid #dcdee2;
+}
+body button:hover {
+  transition: opacity 800ms;
+  opacity: 0.5;
+}
+body .primary {
+  border: 1px solid #2d8cf0;
+  color: white;
+  background-color: #2d8cf0;
+}
+body .danger {
+  border: 1px solid #ed4014;
+  color: white;
+  background-color: #ed4014;
+}
+body .warning {
+  background-color: #ff9900;
+  color: white;
+  border: 1px solid #ff9900;
+}
+body .success {
+  background-color: #19be6b;
+  color: white;
+  border: 1px solid #19be6b;
+}
+body .bgShadow {
+  background-color: #f8f8f9;
+}
+/*# sourceMappingURL=index.css.map */

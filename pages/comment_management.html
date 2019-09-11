@@ -1,0 +1,345 @@
+<!-- 头部按钮、搜索 -->
+<div class="top_wj">
+	<div class="btns_wj" id="btns_wj">
+		<button class="primary" name="btn_add_wj">添加</button>
+		<button class="success" name="btn_dao_wj">导出</button>
+	</div>
+	<div class="search_wj">
+		<input type="text" placeholder="请输入订单编号..." name="search_orderId">
+		<button class="warning" name="btn_search_wj">搜索</button>
+		<button class="warning none" name="search_back_wj">返回</button>
+	</div>
+</div>
+<!-- 表格遍历 -->
+<table class="table_wj" id="table_wj">
+	<thead> 
+		<tr>
+			<th width="50px">编号</th>
+			<th width="150px">订单号</th>
+			<th>内容</th>
+			<th width="100px">评论时间</th>
+			<th width="150px">操作</th>
+		</tr>
+	</thead>
+	<tbody>
+		<!-- 测试行 -->
+		<tr>
+			<td><input type="checkbox"></td>
+			<td>测试</td>
+			<td>测试</td>
+			<td>测试</td>
+			<td>
+				<a class="btn_del_wj" href="javascript:void(0)">删除</a>
+				&nbsp;
+				<a class="btn_upd_wj" href="javascript:void(0)">修改</a>
+			</td>
+		</tr>
+	</tbody>
+</table>
+<!-- 添加评价模态框 -->
+<!-- 层罩 -->
+<div class="modal_wj none">
+	<!-- 模态框内容 -->
+	<div class="modal_container_wj">
+		<!-- 顶部标题 -->
+		<div class="modal_top_wj">
+			<h3>添加评论</h3>
+		</div>
+		<!-- 内容表格 -->
+		<div class="modal_content_wj">
+			<table>
+				<tr>
+					<td>*订单编号:</td>
+					<td><input type="text" name="orderId"></td>
+				</tr>
+				<tr>
+					<td>*评价内容:</td>
+					<td><input type="text" name="content"></td>
+				</tr>
+				<tr>
+					<td>评价时间:</td>
+					<td><input type="text" name="time"></td>
+				</tr>
+			</table>
+		</div>
+		<!-- 添加按钮 -->
+		<div class="modal_foot_wj">
+			<button class="danger" name="btn_back_wj">取消</button>
+			<button class="warning" name="btn_ok_wj">确认</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	var baseURL = "http://134.175.154.93:6677";
+
+
+	//初始化数据函数
+	function initData(){
+		var url = baseURL+"/comment/queryBasic";
+		$.get(url,function(response){
+			//先清空数据
+			$("#table_wj > tbody").empty();
+			response.data.forEach(function(item){
+				var orderId = item.orderId;
+				var content = item.content;
+				var newurl = baseURL+"/comment/findCommentByOrderId";
+				var newdata = "order_id="+orderId;
+				$.get(newurl,newdata,function(response){
+					response.data.forEach(function(item){
+						if(item.content==content){
+							var newTr = $(`
+								<tr>
+								<td><input type="checkbox" value="`+item.id+`"></td>
+								<td>`+item.orderId+`</td>
+								<td>`+item.content+`</td>
+								<td>`+item.commentTime+`</td>
+								<td>
+									<button class="primary" name="btn_del_wj">删除</button>
+									&nbsp;
+									<button class="success" name="btn_upd_wj">修改</button>
+								</td>
+								</tr>
+							`);
+							$("#table_wj > tbody").append(newTr);
+							$("#table_wj > tbody tr").on("mouseover",function(){
+			                	$(this).css("backgroundColor","#ededed");
+			                })
+
+			                $("#table_wj > tbody tr").on("mouseout",function(){
+			                	$(this).css("background","#f5f7f9"); 
+			            	})
+						}
+					});
+				});
+			});
+		});
+	}
+	//关闭模态框并清空内容
+	function close_modal(){
+		$("div.modal_wj").fadeOut(500);
+		$("div.modal_wj").className="modal_wj none";
+		document.querySelector("input[name=orderId]").value="";
+		document.querySelector("input[name=content]").value="";
+		document.querySelector("input[name=time]").value="";
+	}
+
+
+	$(function(){
+		//进行初始化加载
+		initData();
+		//为删除/修改绑定事件
+		$("#table_wj > tbody").on("click","button",function(){
+			switch(this.name){
+				case "btn_del_wj":
+					//0.获取当前行id
+					var id = $(this).parents("tr").find("input").val();
+					var url = baseURL+"/comment/deleteCommentById";
+					var data = "id="+id;
+					$.post(url,data,function(response){
+						initData();
+						alert(response.message);
+					});
+				break;
+				case "btn_upd_wj":
+					alert(2);
+				break;
+			}
+		});
+		// 为添加/导出按钮绑定事件
+		$(".btns_wj > button").on("click",function(){
+			switch(this.name){
+				case "btn_add_wj":
+					$("div.modal_wj").fadeIn(500);
+					$("div.modal_wj").className="modal_wj";
+				break;
+
+				case "btn_dao_wj":
+					alert("导出");
+				break;
+			}
+		});
+		//为模态框中的取消和确认按钮添加事件
+		$(".modal_foot_wj > button").on("click",function(){
+			switch(this.name){
+				case "btn_back_wj":
+					close_modal();
+				break;
+				case "btn_ok_wj":
+					var orderId = document.querySelector("input[name=orderId]").value;
+					var content = document.querySelector("input[name=content]").value;
+					var commentTime = document.querySelector("input[name=time]").value;
+					var url = baseURL+"/comment/insertComment";
+					var data = "orderId="+orderId+"&content="+content+"&commentTime="+commentTime;
+					$.post(url,data,function(response){
+						initData();
+						alert(response.message);
+					});
+					close_modal();
+				break;
+			}
+		});
+		//为搜索按钮添加事件
+		$(".search_wj > button").on("click",function(){
+			switch(this.name){
+				case "btn_search_wj":
+					var orderId = document.querySelector("input[name=search_orderId]").value;
+					var url = baseURL+"/comment/findCommentByOrderId";
+					var data = "order_id="+orderId;
+					$.get(url,data,function(response){
+						$("#table_wj > tbody").empty();
+						response.data.forEach(function(item){
+							var newTr = $(`
+								<tr>
+								<td><input type="checkbox" value="`+item.id+`"></td>
+								<td>`+item.orderId+`</td>
+								<td>`+item.content+`</td>
+								<td>`+item.commentTime+`</td>
+								<td>
+									<button class="primary" name="btn_del_wj">删除</button>
+									&nbsp;
+									<button class="success" name="btn_upd_wj">修改</button>
+								</td>
+								</tr>
+							`);
+							$("#table_wj > tbody").append(newTr);
+						});
+					});
+					$(".search_wj>button:last-child").removeClass("none");
+				break;
+				case "search_back_wj":
+					initData();
+					$(".search_wj>button:last-child").addClass("warning none");
+				break;
+			}
+			
+		});
+	});
+
+
+</script>
+
+<style>
+	div{
+		font-size: 14px;
+	}
+	/*顶部样式*/
+	.top_wj {
+		display: flex;
+		margin-bottom: 20px;
+	}
+	.top_wj > div {
+		flex: 1;
+	}
+	.search_wj {
+		text-align: right;
+	}
+	.search_wj > input:focus {
+		border: 1px solid #4d90fe;
+		box-shadow: 0 0 2px #4d90fe;
+	}
+	.search_wj > input:hover {
+		border: 1px solid #4d90fe;
+		box-shadow: 0 0 2px #4d90fe;
+	}
+	.search_wj > input {
+		outline: none;
+		padding: 5px;
+		border-style: none;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+	}
+	.search_wj > .warning {
+		width: 50px;
+	}
+	.search_back_wj {
+		text-align: right;
+		padding-top: 20px;
+	}
+	/*表格样式*/
+	.table_wj {
+		width: 100%;
+		border: 1px solid #ccc;
+		/*border-collapse: collapse;*/
+		border-radius: 5px;
+		border-spacing: 0;
+		line-height: 2rem;
+		text-align: center;
+	}
+	.table_wj th,
+	.table_wj td {
+		border-right: 1px solid #ccc;
+		border-bottom: 1px solid #ccc;	
+	}
+	.table_wj tr >td:last-child,
+	.table_wj tr >th:last-child {
+		border-right: none;
+	}
+	.table_wj tr:last-child >td {
+		border-bottom: none;
+	}
+	.table_wj button {
+		width: 40px;
+		height: 20px;
+	}
+	/*模态框样式*/
+	.modal_wj {
+		/*层罩*/
+		/*display: none;*/
+		position: absolute;
+	    top: 0;
+	    bottom: 0;
+	    left: 0;
+	    right: 0;
+	    background-color: rgba(0,0,0,0.5);
+	}
+	.modal_container_wj {
+		width: 500px;
+		margin: 200px auto 0;
+	}
+	.modal_top_wj {
+		background-color: #2d8cf0;
+		border-radius: 10px 10px 0 0;
+		text-align: center;
+		padding: 10px 0;
+	}
+	.modal_content_wj{
+		font-size: 16px;
+		background-color: #fff;
+		line-height: 5rem;
+		padding: 0 40px;
+	}
+	.modal_content_wj input:focus {
+		border: 1px solid #4d90fe;
+		box-shadow: 0 0 2px #4d90fe;
+	}
+	.modal_content_wj input:hover {
+		border: 1px solid #4d90fe;
+		box-shadow: 0 0 2px #4d90fe;
+	}
+	.modal_content_wj input {
+		width: 220px;
+		outline: none;
+		padding: 5px;
+		border-style: none;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+	}
+	.modal_content_wj td {
+		padding: 0 20px;
+	}
+	.modal_foot_wj {
+		border-top: 1px solid #ededed;
+		font-size: 16px;
+		background-color: #fff;
+		border-radius: 0 0 10px 10px;
+		text-align: right;
+		padding: 20px;
+	}
+	.none {
+		display: none;
+	}
+
+	
+		
+</style>

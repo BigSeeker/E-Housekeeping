@@ -1,0 +1,516 @@
+
+<style>
+   /*顾客管理者页面*/
+	.wrapper_lxp #table_lxp{
+		width: 100%;
+		border-collapse: collapse;
+		box-sizing: border-box;
+	}
+   .wrapper_lxp #table_lxp th{
+      background-color: #ededed;
+   }
+	.wrapper_lxp #table_lxp td,th{
+		border: 1px solid #ccc;
+		line-height: 2em;
+		text-align: center;
+	}
+   .wrapper_lxp #table_lxp tr > td:last-child > button{
+      margin-left: 15px;
+   }
+   .top_lxp{
+      display: flex;
+   }
+   .top_lxp > .btns_lxp{
+      flex: 1;
+   }
+
+   .top_lxp > .search_lxp > input{
+      box-sizing: border-box;
+      outline: unset;
+      border: none;
+      line-height: 2em;
+      width: 200px;
+      height: 32px;
+      padding-left: 15px;
+      border-radius: 5px;
+      box-shadow: 1px 1px #ededed
+    }
+    .top_lxp > .search_lxp > input:hover{
+      border: 1px solid #ccc;
+      box-shadow: 0 0 5px #f00;
+    }
+
+    /*模态框*/
+  
+    .modal_lxp{   /*遮罩*/
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal_container_lxp{
+      position: relative;
+      width: 600px;
+      margin: 200px auto 250px;
+      background-color: #fff;
+      height: 620px;
+      border-radius: 8px 8px 0 0;
+      /*background-color: #b6ebeb;*/
+    }
+    .modal_lxp > .modal_container_lxp > .title_lxp{
+         height: 2em;
+         text-decoration-line: 2em;
+         font-size: 16px;
+         padding:0 2em;
+         text-align: center;
+         border-radius: 8px 8px 0 0;
+         background-color: #266f6f;
+         border-bottom: 1px solid #ccc;
+         padding-top: 8px;
+         color: #fff;
+
+      }
+      .content_lxp{
+         border-top: 1px solid #ccc;
+         border-bottom: 1px solid #ededed;
+      }
+      .content_lxp table.table_lxp{
+         
+      }
+      .content_lxp table.table_lxp td{
+         line-height: 3em;
+         padding: 2em;
+      }
+
+      .content_lxp table.table_lxp td > input{
+         line-height: 2em;
+         width: 230px;
+         height: 32px;
+         border:none;
+         border:1px solid #ccc; 
+         border-radius: 5px;
+         padding: 0  10px;
+
+      }
+      .content_lxp table.table_lxp td > input:hover{
+         border: 1px solid #1890ff;
+         box-shadow: 1px 1px #1890ff;
+
+      }
+      .content_lxp table.table_lxp td:last-child > div{
+         line-height: 2.2em;
+         width: 160px;
+         border:1px solid #ccc;
+         border-radius: 5px;
+         font-size: 12px;
+         text-align: center;
+         cursor: pointer;
+      }
+       .content_lxp table.table_lxp td:last-child > div:hover{
+         border:1px solid #1890ff;
+         box-shadow: 1px 1px #1890ff;
+         color: #1890ff;
+
+       }
+       .modal_footer_lxp{
+         position: absolute;
+         right: 30px;
+         bottom: 15px;
+       }
+        .modal_footer_lxp .primary{
+         margin-right: 20px;
+        }
+        /*//使文件选择器消失*/
+        #photo_lxp{
+         display: none;
+        }
+        /*使页面消失*/
+        .none{
+         display:none;
+        }
+        #telephone,
+        #password,
+        #realname{
+         font-size: 12px;
+         color: red;
+        }
+
+</style>
+<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script>
+
+   // var btn_add = document.querySelector("div.btns_lxp > button:first-child");
+   // btn_add.onclick = function(event){
+   //    document.querySelector("div.none").className = "modal_lxp";
+   // }
+   
+   
+   // 初始化数据
+   initDate();
+   function initDate(){
+         var url = "http://134.175.154.93:6677/customer/findCustomerAll";
+
+         $.get(url,function(response){
+            console.log(response.data);
+            $("#table_lxp > tbody").empty();
+            response.data.forEach(function(item){
+               var newTr = $(`<tr id ="1">
+               <td ><input id="mycheck" name="mycheck" type="checkbox" value="`+item.id+`"></td>
+               <td>`+item.realname+`</td>
+               <td>`+item.telephone+`</td>
+               <td>`+item.password+`</td>
+               <td>`+item.photo+`</td>
+               <td>
+               <button class="primary">删除</button>
+               <button class="warning">修改</button>
+               <button class="success">详情</button>
+            </td>
+         </tr>`);
+                $("#table_lxp > tbody").append(newTr);
+               $("#table_lxp > tbody tr").on("mouseover",function(){
+                  $(this).css("backgroundColor","#ededed");
+               })
+
+                $("#table_lxp > tbody tr").on("mouseout",function(){
+                  $(this).css("background","#fff"); 
+               })
+               
+             $("input[name=mycheck]").click(function(){
+
+               var checks = $("input[name=mycheck]");
+   
+       
+               $("#checkAll").attr("checked",checks.length == checks.filter(":checked").length);
+
+         
+       })
+
+            });
+         });
+      };
+$(function(){
+     
+   });
+
+   // 添加
+   $(function(){
+      //点击添加更新顾客信息的模态框出现
+      $("div.btns_lxp > button:first-child").click(function(){
+         $("div.none").fadeIn(2000);
+         $("div.none").removeClass("none");
+
+         // 点击模态框上的取消，返回顾客主页面
+      $(".modal_footer_lxp > button:first-child").click(function(){
+         
+         $("div.modal_lxp").addClass("none");
+         $("div.none").fadeOut(500);
+         document.querySelector("input[name = realname]").value = "";
+         document.querySelector("input[name = telephone]").value = "";
+         document.querySelector("input[name = password]").value = "";
+         document.querySelector("#realname").innerText = "";
+         document.querySelector("#password").innerText = "";
+         document.querySelector("#telephone").innerText = "";
+      });
+        
+      });
+   });
+
+   //为模态框中的手机和密码输入框绑定键盘抬起事件
+   var input_telephone = document.querySelector("input[name = telephone]");
+   var input_password = document.querySelector("input[name = password]");
+   var input_realname = document.querySelector("input[name=realname]");
+       input_realname.onkeyup = function(){  
+         if(!/^\s*$/){
+            document.querySelector("#realname").innerText = "不能为空!";
+         }else{
+            document.querySelector("#realname").innerText = "√";
+         }
+      }
+      input_telephone.onkeyup = function(){
+         if(!(/^1[34578]\d{9}/).test(this.value)){
+            document.querySelector("#telephone").innerText = "不符规范!";
+         } else {
+            document.querySelector("#telephone").innerText = "√";
+         }
+      }
+      input_password.onkeyup = function(){
+         if(!(/\d{6,}/).test(this.value)){
+            document.querySelector("#password").innerText = "密码为6位数字";
+         } else {
+            document.querySelector("#password").innerText = "√";
+         }
+      }
+   
+
+   function formVerity(name,phone,passd) {
+         var name_result = /.+/.test(name);
+         var phone_result = /^1[34578]\d{9}/.test(phone);
+         var passd_result = (/\d{6}/).test(passd);
+
+         if(name_result&&phone_result&&passd_result) {
+            return true;
+         } else {
+            return false;
+         }
+   } 
+
+   //为添加模态框中的确定按钮添加事件处理函数
+   $('.modal_footer_lxp > button:last-child').click(function(event){
+      var realname = document.querySelector("input[name=realname]").value;
+
+      var telephone = document.querySelector("input[name = telephone]").value;
+
+
+      var password = document.querySelector("input[name = password]").value;
+      var id = document.querySelector("input[name = id]").value;
+      var url = "http://134.175.154.93:6677/customer/saveCustomerOrUpdateCustomer";
+      if(id){
+            data = "id="+id+"&realname="+realname+"&telephone="+telephone;
+
+         }else{
+            data = "realname="+realname+"&telephone="+telephone;
+         }
+      
+
+      if(formVerity(realname,telephone,password)) {
+         $.post(url,data,function(response,status){
+         console.log(response,status);
+         initDate();
+          $("div.modal_lxp").addClass("none");
+      $("div.none").fadeOut(500);
+
+      })
+      } else {
+         alert("你的信息验证不通过！")
+      }
+      // $(document).ready(function(){  
+         // var flag = false;
+         // function check(){
+         //    if((/^1[34578]\d{9}/).test(telephone)){
+         //       flag = true;
+         //       if((/\d{6}/).test(password)){
+         //          flag = true;
+         //       }else{
+         //          document.querySelector("#password").innerText = "密码为6位数字";
+         //          return false;
+         //       }
+         //    }else{
+         //       document.querySelector("#telephone").innerText = "不符规范！";
+         //       return false;
+         //    }
+         // // }
+          // if(flag=true){
+          //   console.log("success")
+          // }else{
+          //    $('.modal_footer_lxp > button:last-child').unbind();
+
+          // }
+      // }); 
+         
+       
+      
+        document.querySelector("input[name = realname]").value = "";
+        document.querySelector("input[name = telephone]").value = "";
+        document.querySelector("input[name = password]").value = "";
+        document.querySelector("#realname").innerText = "";
+        document.querySelector("#password").innerText = "";
+        document.querySelector("#telephone").innerText = "";
+     
+      // 阻止默认行为
+      event.preventDefault();
+
+   });
+
+
+
+
+
+   //删除顾客
+   $(function(){
+      //初始化数据
+      initDate();
+      // 为删除按钮添加事件
+      $('#table_lxp > tbody').on('click','button',function(){
+         switch(this.className){
+            case'primary':
+               var id = $(this).parents("tr").find("input").val();
+               var url = 'http://134.175.154.93:6677/customer/deleteCustomerById';
+               // var data = "id="+id;
+               $.post(url,{id:id},function(result){
+                  alert(result.message);
+                  initDate();
+               })
+
+               break;
+            case'warning':
+               var id = event.target.parentNode.parentNode.children[0].children[0].value;
+               var realname = event.target.parentNode.parentNode.children[1].innerText;
+               var telephone = event.target.parentNode.parentNode.children[2].innerText;
+               var password = event.target.parentNode.parentNode.children[3].innerText;
+               document.querySelector("input[name=realname]").value = realname;
+               document.querySelector("input[name = telephone]").value = telephone;
+               document.querySelector("input[name = id]").value = id;
+               $("div.none").fadeIn(2000);
+               $("div.none").removeClass("none");
+
+
+               break;
+            case'success':
+               break;
+         }
+      })
+   })
+
+
+   // 批量删除
+  
+  $(function(){ 
+      //全选
+      $("#checkAll").click(function(){
+         $("input[name=mycheck]").prop("checked",this.checked);
+      });
+      //单选
+     
+      $("div.btns_lxp button:nth-child(2)").click(function(){
+         /**获取下面选中的checkbox*/
+         var checkedbox = $("input[name=mycheck]:checked");
+            console.log(checkedbox);
+            if(checkedbox.length == 0){
+               alert("请选择要删除的人员！！！");
+            }else{
+               if(confirm("你确定要删除吗？？？")){
+                  var ids = new Array();
+                  checkedbox.each(function(){
+                     console.log(this,"123")
+                        ids.push(this.value);
+                       
+                  });
+                  alert(ids);
+                  // var id = $(this).parents("tr").find("input").val();
+                  var url = 'http://134.175.154.93:6677/customer/batchDeleteCustomer';
+                  // var data = ids; 
+                  $.post(url,{ids:ids.join(",")},function(result){
+                  alert(result.message);
+                  initDate();
+                  })
+               }
+            }
+         });
+
+   });
+
+
+  // 模糊查询
+    $(function(){
+       $('div.search_lxp button.danger').click(function(){
+          var sstxt=$('#text_lxp').val();
+         $("#table_lxp #tbl_tbd tr").hide().filter(":contains('"+sstxt+"')").show();
+         document.querySelector("input[name = text_lxp]").value = ""; 
+      })
+   })
+
+
+
+    //文件选择器设置
+    $(document).ready(function(){
+      $(" .content_lxp table.table_lxp td:last-child > div").click(function(){
+         $("#photo_lxp").click();
+      })
+    })
+
+
+
+
+
+   
+</script>
+
+<!-- 顾客管理主页面 -->
+<div class="wrapper_lxp">
+   <div class="top_lxp">
+      <div class="btns_lxp">
+         <button class="primary">添加</button>
+         <button class="warning">批量删除</button>
+         <button class="success">导出</button> 
+      </div>
+      <div class="search_lxp">
+         <input id = "text_lxp" name = "text_lxp" type="text" placeholder="请输入...">
+         <button class="danger">搜索</button>
+      </div>
+   </div>
+   <div class="divider"></div>
+
+   <table id="table_lxp">
+      <thead>
+          <tr>
+            <th><input type="checkbox" id="checkAll" name="checkAll"></th>
+            <th>姓名</th>
+            <th>手机号</th>
+            <th>密码</th>
+            <th>照片</th>
+            <th width="460px;">操作</th>
+         </tr>
+      </thead>
+      <tbody id = "tbl_tbd">
+        
+     <!--     <tr>
+            <td><input type="checkbox"></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+               <button class="primary">删除</button>
+               <button class="warning">修改</button>
+               <button class="success">详情</button>
+            </td>
+         </tr> -->
+      </tbody>
+   </table>
+</div>
+<!-- 更新顾客信息模态框 -->
+<div class="modal_lxp none">
+   <div class="modal_container_lxp">
+      <div class="title_lxp">
+         <h3>更新顾客信息</h3>
+      </div>
+      <div class="content_lxp">
+         <table class="table_lxp">
+            <tbody class="tbd_lxp">
+               <input type="hidden" name="id">
+               <input type="file" id = "photo_lxp">
+               <tr>
+                  <td>*姓名</td>
+                  <td> <input type="text" name = "realname"> </td>
+                  <td id="realname"></td>
+               </tr>
+               <tr>
+                  <td>*手机号</td>
+                  <td><input type="text" name = "telephone"></td>
+                  <td id="telephone"></td>
+               </tr>
+               <tr>
+                  <td>*密码</td>
+                  <td><input type="text" name = "password"></td>
+                  <td id="password"></td>
+               </tr>
+               <tr>
+                  <td>*上传照片</td>
+                  <td><div>Click to Upload</div></td>
+               </tr>
+            </tbody>
+         </table>
+      </div>
+      <div class="modal_footer_lxp">
+         <button class="primary">取消</button>
+         <button class="success">确定</button>
+      </div>
+      
+   </div>
+</div>
+
+
+
+
